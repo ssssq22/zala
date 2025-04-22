@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>¼«¹âÀâ¾µ¿Õ¼ä</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            overflow: hidden;
+            background: #0a0c15;
+        }
+        .matrix {
+            display: grid;
+            width: 100vw;
+            height: 100vh;
+            transition: 0.8s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        .prism {
+            position: relative;
+            border: 1px solid rgba(255,255,255,0.08);
+            animation: prismFlow 10s infinite linear;
+            transition: 
+                transform 0.7s cubic-bezier(0.4, 0, 0.2, 1),
+                filter 0.5s;
+        }
+        @keyframes prismFlow {
+            0% { background: hsl(270, 85%, 60%) }
+            25% { background: hsl(180, 85%, 60%) }
+            50% { background: hsl(60, 85%, 60%) }
+            75% { background: hsl(150, 85%, 60%) }
+            100% { background: hsl(270, 85%, 60%) }
+        }
+        .prism::before {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background: linear-gradient(45deg,
+                rgba(100,255,255,0.2) 0%,
+                rgba(255,100,255,0.2) 100%);
+            mix-blend-mode: lighten;
+            transform: rotate(45deg) translate(-25%, -25%);
+        }
+        .prism:hover {
+            transform: scale(1.15) rotate(-3deg);
+            filter: brightness(1.4);
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="matrix"></div>
+
+    <script>
+        const matrix = document.querySelector('.matrix');
+        let divisions = 3;
+
+        function generateLayers(cols, rows) {
+            matrix.style.gridTemplate = 
+                `repeat(${rows}, 1fr)/repeat(${cols}, 1fr)`;
+            
+            matrix.innerHTML = '';
+            const total = cols * rows;
+            for(let i=0; i<total; i++){
+                const prism = document.createElement('div');
+                prism.className = 'prism';
+                prism.style.animationDelay = `${Math.random()*5 - 2.5}s`;
+                matrix.appendChild(prism);
+            }
+        }
+
+        function fractalDivide() {
+            divisions += Math.floor(Math.random() * 2) + 1;
+            const density = divisions % 5 === 0 ? divisions + 2 : divisions;
+            generateLayers(density, density);
+            
+            if(divisions < 25) {
+                requestAnimationFrame(() => {
+                    setTimeout(fractalDivide, 1500);
+                });
+            }
+        }
+
+        generateLayers(3,3);
+        setTimeout(fractalDivide, 2500);
+
+        window.addEventListener('resize', () => {
+            divisions = 3;
+            generateLayers(3,3);
+            setTimeout(fractalDivide, 2500);
+        });
+    </script>
+</body>
+</html>
