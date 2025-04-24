@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>风扇动画</title>
+    <style>
+        body {
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        .fan-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .fan-base {
+            width: 120px;
+            height: 20px;
+            background-color: #555;
+            border-radius: 5px;
+            z-index: 1;
+        }
+        
+        .fan-pole {
+            width: 15px;
+            height: 150px;
+            background-color: #333;
+            margin-top: -5px;
+            z-index: 1;
+        }
+        
+        .fan-head {
+            width: 80px;
+            height: 80px;
+            background-color: #444;
+            border-radius: 50%;
+            position: relative;
+            margin-top: -5px;
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .fan-center {
+            width: 30px;
+            height: 30px;
+            background-color: #222;
+            border-radius: 50%;
+            z-index: 3;
+        }
+        
+        .fan-blades {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            top: -60px;
+            left: -60px;
+            z-index: 1;
+            animation: spin 2s linear infinite;
+            transform-origin: center;
+        }
+        
+        .blade {
+            position: absolute;
+            width: 80px;
+            height: 20px;
+            background: linear-gradient(to right, #666, #999);
+            border-radius: 10px;
+            transform-origin: 100px 100px;
+        }
+        
+        .blade:nth-child(1) {
+            transform: rotate(0deg);
+        }
+        
+        .blade:nth-child(2) {
+            transform: rotate(120deg);
+        }
+        
+        .blade:nth-child(3) {
+            transform: rotate(240deg);
+        }
+        
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        .controls {
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        button {
+            padding: 8px 15px;
+            margin: 5px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        .speed-display {
+            margin-top: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="fan-container">
+        <div class="fan-blades">
+            <div class="blade"></div>
+            <div class="blade"></div>
+            <div class="blade"></div>
+        </div>
+        <div class="fan-head">
+            <div class="fan-center"></div>
+        </div>
+        <div class="fan-pole"></div>
+        <div class="fan-base"></div>
+        
+        <div class="controls">
+            <button id="speed1">低速</button>
+            <button id="speed2">中速</button>
+            <button id="speed3">高速</button>
+            <button id="stop">停止</button>
+            <div class="speed-display" id="speedDisplay">当前速度: 停止</div>
+        </div>
+    </div>
+    
+    <script>
+        const fan = document.querySelector('.fan-blades');
+        const speed1Btn = document.getElementById('speed1');
+        const speed2Btn = document.getElementById('speed2');
+        const speed3Btn = document.getElementById('speed3');
+        const stopBtn = document.getElementById('stop');
+        const speedDisplay = document.getElementById('speedDisplay');
+        
+        // 默认停止状态
+        fan.style.animationPlayState = 'paused';
+        
+        speed1Btn.addEventListener('click', () => {
+            fan.style.animationDuration = '3s';
+            fan.style.animationPlayState = 'running';
+            speedDisplay.textContent = '当前速度: 低速';
+        });
+        
+        speed2Btn.addEventListener('click', () => {
+            fan.style.animationDuration = '1s';
+            fan.style.animationPlayState = 'running';
+            speedDisplay.textContent = '当前速度: 中速';
+        });
+        
+        speed3Btn.addEventListener('click', () => {
+            fan.style.animationDuration = '0.5s';
+            fan.style.animationPlayState = 'running';
+            speedDisplay.textContent = '当前速度: 高速';
+        });
+        
+        stopBtn.addEventListener('click', () => {
+            fan.style.animationPlayState = 'paused';
+            speedDisplay.textContent = '当前速度: 停止';
+        });
+    </script>
+</body>
+</html>
