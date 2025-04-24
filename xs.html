@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>药片扣取模拟</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: #f0f5ff;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .blister-pack {
+            position: relative;
+            width: 400px;
+            height: 300px;
+            background: linear-gradient(45deg, #e0e0e0, #ffffff);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+
+        .pill {
+            width: 60px;
+            height: 60px;
+            background: #4a90e2;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            position: absolute;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.5);
+        }
+
+        .pill::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 50%, rgba(255,255,255,0.3));
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+
+        .peel {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: rgba(255,255,255,0.9);
+            clip-path: polygon(0 0, 100% 0, 0 100%);
+            opacity: 0;
+            transition: all 0.5s ease;
+        }
+
+        #score {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        @keyframes pop-out {
+            0% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(-15deg); }
+            100% { transform: translateY(60px) rotate(-30deg); }
+        }
+
+        .peel-effect {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            opacity: 0;
+            animation: peel 0.8s ease-out;
+        }
+
+        @keyframes peel {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(3); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div id="score">已扣取：<span>0</span>/6</div>
+    <div class="blister-pack" id="blister">
+        <!-- 自动生成3x2排列的药片 -->
+    </div>
+
+    <script>
+        const blister = document.getElementById('blister');
+        let count = 0;
+        const positions = [
+            {x: 50, y: 50}, {x: 150, y: 50}, {x: 250, y: 50},
+            {x: 50, y: 150}, {x: 150, y: 150}, {x: 250, y: 150}
+        ];
+
+        // 生成药片
+        positions.forEach(pos => {
+            const pill = document.createElement('div');
+            pill.className = 'pill';
+            pill.style.left = pos.x + 'px';
+            pill.style.top = pos.y + 'px';
+            
+            // 创建铝箔层
+            const peel = document.createElement('div');
+            peel.className = 'peel';
+            peel.style.left = (pos.x - 5) + 'px';
+            peel.style.top = (pos.y - 5) + 'px';
+            
+            pill.addEventListener('click', function() {
+                if (this.classList.contains('removed')) return;
+                
+                // 添加撕开效果
+                const effect = document.createElement('div');
+                effect.className = 'peel-effect';
+                effect.style.left = `${pos.x + 30}px`;
+                effect.style.top = `${pos.y + 30}px`;
+                blister.appendChild(effect);
+                
+                // 更新状态
+                this.classList.add('removed');
+                peel.style.opacity = '1';
+                peel.style.transform = 'rotate(-30deg) translate(-20px, 20px)';
+                
+                // 药片弹出动画
+                this.style.animation = 'pop-out 0.8s forwards';
+                this.style.cursor = 'default';
+                
+                // 播放音效
+                const audio = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU');
+                audio.play().catch(() => {});
+                
+                // 更新分数
+                count++;
+                document.querySelector('#score span').textContent = count;
+                
+                // 移除效果元素
+                setTimeout(() => effect.remove(), 800);
+                
+                if(count === 6) {
+                    setTimeout(() => alert('所有药片已取出！🎉'), 500);
+                }
+            });
+
+            blister.appendChild(pill);
+            blister.appendChild(peel);
+        });
+    </script>
+</body>
+</html>

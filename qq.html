@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>吹爆气球互动游戏</title>
+    <style>
+        body {
+            background: #87CEEB;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #balloon {
+            width: 100px;
+            height: 120px;
+            background: #FF69B4;
+            border-radius: 50% 50% 50% 50%/60% 60% 40% 40%;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.3s;
+            box-shadow: inset -8px -8px 15px rgba(0,0,0,0.1);
+        }
+
+        #balloon::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 40%;
+            width: 20px;
+            height: 30px;
+            background: #FFD700;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+
+        /* 爆炸动画 */
+        .explode {
+            animation: explode 0.8s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.5); opacity: 0.8; }
+            100% { 
+                transform: scale(0); 
+                opacity: 0;
+                background: radial-gradient(circle, #FF4500 20%, transparent 70%);
+            }
+        }
+
+        .particle {
+            position: absolute;
+            background: #FF4500;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="balloon"></div>
+    <p id="counter">当前压力值: 0%</p >
+
+    <script>
+        const balloon = document.getElementById('balloon');
+        const counter = document.getElementById('counter');
+        let pressure = 0;
+        let isExploded = false;
+
+        // 气球缩放函数
+        function inflate() {
+            if(isExploded) return;
+            
+            pressure += 5;
+            const scale = 1 + pressure/100;
+            balloon.style.transform = `scale(${scale})`;
+            counter.textContent = `当前压力值: ${pressure}%`;
+
+            // 压力超过阈值时爆炸
+            if(pressure >= 100) {
+                explodeBalloon();
+            }
+        }
+
+        // 爆炸效果
+        function explodeBalloon() {
+            isExploded = true;
+            balloon.classList.add('explode');
+            
+            // 生成爆炸粒子
+            for(let i=0; i<20; i++) {
+                createParticle(
+                    balloon.offsetLeft + balloon.offsetWidth/2,
+                    balloon.offsetTop + balloon.offsetHeight/2
+                );
+            }
+
+            // 重置气球
+            setTimeout(() => {
+                balloon.style.transform = 'scale(1)';
+                balloon.classList.remove('explode');
+                pressure = 0;
+                counter.textContent = '当前压力值: 0%';
+                isExploded = false;
+            }, 1500);
+        }
+
+        // 创建粒子特效
+        function createParticle(x, y) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            
+            // 随机参数
+            const size = Math.random()*10 + 5;
+            const angle = Math.random()*Math.PI*2;
+            const velocity = Math.random()*8 + 2;
+            
+            Object.assign(particle.style, {
+                width: `${size}px`,
+                height: `${size}px`,
+                left: `${x}px`,
+                top: `${y}px`,
+                background: `hsl(${Math.random()*360}, 70%, 50%)`
+            });
+
+            document.body.appendChild(particle);
+
+            // 粒子动画
+            requestAnimationFrame(() => {
+                particle.style.transform = `translate(
+                    ${Math.cos(angle)*velocity*50}px,
+                    ${Math.sin(angle)*velocity*50}px
+                ) scale(0)`;
+                particle.style.opacity = 0;
+            });
+
+            // 移除粒子
+            setTimeout(() => particle.remove(), 1000);
+        }
+
+        // 事件监听
+        balloon.addEventListener('click', inflate);
+        balloon.addEventListener('mouseover', () => {
+            balloon.style.transform += ' rotate(2deg)';
+        });
+        balloon.addEventListener('mouseout', () => {
+            balloon.style.transform = balloon.style.transform.replace('rotate(2deg)', '');
+        });
+    </script>
+</body>
+</html>
