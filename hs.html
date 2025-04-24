@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手机喝水大作战</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #e3f2fd;
+            touch-action: none;
+        }
+        #gameCanvas {
+            background: linear-gradient(to bottom, #81d4fa 0%, #4fc3f7 100%);
+        }
+        .hud {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #1565c0;
+            font-family: Arial;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        .tap-effect {
+            position: absolute;
+            pointer-events: none;
+            animation: splash 0.6s;
+        }
+        @keyframes splash {
+            from { transform: scale(0); opacity: 1; }
+            to { transform: scale(3); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas"></canvas>
+    <div class="hud">
+        <div>电量: <span id="battery">100</span>%</div>
+        <div>水分: <span id="hydration">0</span>ml</div>
+    </div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// 初始化画布尺寸
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// 游戏对象
+const game = {
+    battery: 100,
+    hydration: 0,
+    lastDrink: 0,
+    phone: {
+        x: canvas.width/2,
+        y: canvas.height/2,
+        width: 120,
+        height: 220,
+        tilt: 0
+    }
+};
+
+// 水滴粒子数组
+let waterDrops = [];
+
+// 事件监听
+canvas.addEventListener('touchstart', handleTouch);
+canvas.addEventListener('click', handleTouch); // 桌面端兼容
+
+function handleTouch(e) {
+    e.preventDefault();
+    const rect = canvas.getBoundingClientRect();
+    const touchX = (e.clientX || e.touches[0].clientX) - rect.left;
+    const touchY = (e.clientY || e.touches[0].clientY) - rect.top;
+
+    // 创建水滴
+    createWaterDrop(touchX, touchY);
+    
+    // 补充水分
+    const now = Date.now();
+    if (now - game.lastDrink > 1000) { // 限制喝水频率
+        game.hydration = Math.min(game.hydration + 50, 300);
+        game.lastDrink = now;
+    }
+}
+
+function createWaterDrop(x, y) {
+    waterDrops.push({
+        x,
+        y,
+        radius: Math.random() * 8 + 5,
+        speedX: (Math.random() - 0.5) * 10,
+        speedY: Math.random() * -15,
+        alpha: 1
+    });
+}
+
+// 游戏循环
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 绘制手机
+    drawPhone();
+    
+    // 更新并绘制水滴
+    updateWaterDrops();
+    
+    // 更新游戏状态
+    updateGameState();
+    
+    requestAnimationFrame(gameLoop);
+}
+
+function drawPhone() {
+    ctx.save();
+    ctx.translate(game.phone.x, game.phone.y);
+    ctx.rotate(game.phone.tilt * Math.PI / 180);
+    
+    // 手机主体
+    ctx.fillStyle = '#eceff1';
+    ctx.fillRect(-game.phone.width/2, -game.phone.height/2, 
+                game.phone.width, game.phone.height);
+    
+    // 屏幕
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(-game.phone.width/2 + 10, -game.phone.height/2 + 20, 
+                game.phone.width - 20, game.phone.height - 40);
+    
+    ctx.restore();
+}
+
+function updateWaterDrops() {
+    waterDrops = waterDrops.filter(drop => {
+        drop.x += drop.speedX;
+        drop.y += drop.speedY;
+        drop.speedY += 0.5; // 重力
+        drop.alpha -= 0.02;
+        
+        ctx.beginPath();
+        ctx.arc(drop.x, drop.y, drop.radius, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(54, 162, 235, ${drop.alpha})`;
+        ctx.fill();
+        
+        return drop.y > 0 && drop.alpha > 0;
+    });
+}
+
+function updateGameState() {
+    // 自动漏电
+    game.battery = Math.max(game.battery - (game.hydration/300 * 0.1), 0);
+    document.getElementById('battery').textContent = Math.floor(game.battery);
+    document.getElementById('hydration').textContent = game.hydration;
+    
+    // 倾斜手机效果
+    game.phone.tilt = (game.phone.tilt + 0.5) % 360;
+    
+    // 游戏结束检测
+    if (game.battery <= 0) {
+        alert('手机没电啦！快去充电吧~');
+        location.reload();
+    }
+}
+
+// 启动游戏
+gameLoop();
+
+// 移动端适配：陀螺仪控制
+if (window.DeviceOrientationEvent) {
+    window.addEventListener('deviceorientation', (e) => {
+        game.phone.tilt = e.gamma * 0.5;
+    });
+}
+</script>
+
+</body>
+</html>
