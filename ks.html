@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>考试小超人</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f0f5ff;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+        }
+        .exam-card {
+            border: 2px solid #4a90e2;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: transform 0.3s;
+        }
+        .exam-card:hover {
+            transform: translateY(-5px);
+        }
+        .progress-bar {
+            height: 10px;
+            background: #eee;
+            border-radius: 5px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        .progress {
+            height: 100%;
+            background: #4a90e2;
+            width: 0%;
+            transition: width 0.5s;
+        }
+        .options {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .option-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            background: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .option-btn:hover {
+            transform: scale(1.05);
+        }
+        .correct { background: #d4edda !important; }
+        .wrong { background: #f8d7da !important; }
+        #result {
+            text-align: center;
+            font-size: 1.2em;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 考试小超人</h1>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+        <div id="questionArea"></div>
+        <div id="result"></div>
+        <button onclick="startExam()" style="margin-top: 20px; padding: 12px 30px;">
+            🚀 开始挑战
+        </button>
+    </div>
+
+<script>
+// 题库数据（可自行扩展）
+const questionBank = [
+    {
+        question: "中国最大的淡水湖是？",
+        options: ["洞庭湖", "鄱阳湖", "太湖", "洪泽湖"],
+        answer: 1
+    },
+    {
+        question: "下列哪个是素数？",
+        options: [15, 17, 21, 23],
+        answer: 3
+    },
+    {
+        question: "世界上面积最大的国家是？",
+        options: ["中国", "美国", "俄罗斯", "加拿大"],
+        answer: 2
+    }
+];
+
+let currentQuestion = 0;
+let score = 0;
+let timeLeft = 30;
+
+function startExam() {
+    document.getElementById('result').style.display = 'none';
+    loadQuestion();
+    startTimer();
+}
+
+function loadQuestion() {
+    const question = questionBank[currentQuestion];
+    const optionsHtml = question.options.map((opt, index) => `
+        <button class="option-btn" onclick="checkAnswer(${index})">
+            ${opt}
+        </button>
+    `).join('');
+
+    document.getElementById('questionArea').innerHTML = `
+        <div class="exam-card">
+            <h3>${currentQuestion + 1}/${questionBank.length} 题</h3>
+            <p>${question.question}</p >
+            <div class="options">${optionsHtml}</div>
+        </div>
+    `;
+}
+
+function checkAnswer(selected) {
+    const question = questionBank[currentQuestion];
+    const isCorrect = selected === question.answer;
+    
+    // 显示反馈
+    const buttons = document.querySelectorAll('.option-btn');
+    buttons.forEach((btn, index) => {
+        btn.disabled = true;
+        if (index === selected) {
+            btn.classList.add(isCorrect ? 'correct' : 'wrong');
+        }
+    });
+
+    // 更新分数
+    if (isCorrect) score += 10;
+    currentQuestion++;
+    
+    // 延迟加载下一题
+    setTimeout(() => {
+        if (currentQuestion < questionBank.length) {
+            loadQuestion();
+        } else {
+            endExam();
+        }
+    }, 1500);
+}
+
+function startTimer() {
+    const timer = setInterval(() => {
+        timeLeft--;
+        document.getElementById('progress').style.width = 
+            ((questionBank.length - currentQuestion) / questionBank.length * 100) + '%';
+        
+        if (timeLeft <= 0 || currentQuestion >= questionBank.length) {
+            clearInterval(timer);
+            endExam();
+        }
+    }, 1000);
+}
+
+function endExam() {
+    document.getElementById('questionArea').innerHTML = `
+        <div id="result">
+            <h2>🎉 考试结束！</h2>
+            <p>得分：${score}/${questionBank.length * 10}</p >
+            <button onclick="location.reload()">再考一次</button>
+        </div>
+    `;
+}
+</script>
+</body>
+</html>
