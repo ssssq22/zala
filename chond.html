@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>充电小游戏</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            padding: 20px;
+        }
+        
+        .game-container {
+            width: 300px;
+            background-color: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .battery {
+            width: 100px;
+            height: 200px;
+            border: 5px solid #333;
+            border-radius: 10px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .battery-cap {
+            width: 30px;
+            height: 10px;
+            background-color: #333;
+            margin: 0 auto;
+            border-radius: 5px 5px 0 0;
+        }
+        
+        .charge-level {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background-color: #4CAF50;
+            transition: height 0.3s;
+            height: 0%;
+        }
+        
+        .overheat {
+            background-color: #FF5722;
+        }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        
+        button:hover {
+            background-color: #45a049;
+        }
+        
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 10px 0;
+        }
+        
+        .message {
+            margin: 10px 0;
+            font-weight: bold;
+            min-height: 20px;
+        }
+        
+        .success {
+            color: #4CAF50;
+        }
+        
+        .warning {
+            color: #FF9800;
+        }
+        
+        .danger {
+            color: #F44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>充电小游戏</h1>
+        <p>点击充电按钮为电池充电，但不要让它过热！</p >
+        
+        <div class="battery-cap"></div>
+        <div class="battery">
+            <div class="charge-level" id="chargeLevel"></div>
+        </div>
+        
+        <div class="stats">
+            <div>电量: <span id="chargePercent">0</span>%</div>
+            <div>温度: <span id="tempValue">25</span>°C</div>
+        </div>
+        
+        <div class="message" id="message"></div>
+        
+        <div class="controls">
+            <button id="chargeBtn">充电</button>
+            <button id="coolBtn">冷却</button>
+            <button id="resetBtn">重置</button>
+        </div>
+        
+        <div id="score">分数: 0</div>
+    </div>
+    
+    <script>
+        const chargeLevel = document.getElementById('chargeLevel');
+        const chargePercent = document.getElementById('chargePercent');
+        const tempValue = document.getElementById('tempValue');
+        const message = document.getElementById('message');
+        const chargeBtn = document.getElementById('chargeBtn');
+        const coolBtn = document.getElementById('coolBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const scoreDisplay = document.getElementById('score');
+        
+        let charge = 0;
+        let temp = 25;
+        let score = 0;
+        let gameActive = true;
+        
+        // 更新电池显示
+        function updateBattery() {
+            chargeLevel.style.height = charge + '%';
+            chargePercent.textContent = charge;
+            
+            if (temp > 60) {
+                chargeLevel.classList.add('overheat');
+            } else {
+                chargeLevel.classList.remove('overheat');
+            }
+            
+            tempValue.textContent = temp;
+            
+            // 检查游戏状态
+            if (temp >= 100) {
+                message.textContent = "电池过热爆炸了！游戏结束！";
+                message.className = "message danger";
+                gameActive = false;
+                chargeBtn.disabled = true;
+            } else if (charge >= 100) {
+                message.textContent = "充电完成！你赢了！";
+                message.className = "message success";
+                score += 100;
+                scoreDisplay.textContent = "分数: " + score;
+                gameActive = false;
+                chargeBtn.disabled = true;
+            } else if (temp > 60) {
+                message.textContent = "警告：电池过热！";
+                message.className = "message warning";
+            } else {
+                message.textContent = "";
+                message.className = "message";
+            }
+        }
+        
+        // 充电按钮点击事件
+        chargeBtn.addEventListener('click', function() {
+            if (!gameActive) return;
+            
+            charge += 5;
+            temp += 10 + Math.floor(Math.random() * 5);
+            
+            if (charge > 100) charge = 100;
+            
+            score += 5;
+            scoreDisplay.textContent = "分数: " + score;
+            
+            updateBattery();
+        });
+        
+        // 冷却按钮点击事件
+        coolBtn.addEventListener('click', function() {
+            if (!gameActive) return;
+            
+            temp -= 15;
+            if (temp < 25) temp = 25;
+            
+            score -= 2;
+            if (score < 0) score = 0;
+            scoreDisplay.textContent = "分数: " + score;
+            
+            updateBattery();
+        });
+        
+        // 重置按钮点击事件
+        resetBtn.addEventListener('click', function() {
+            charge = 0;
+            temp = 25;
+            gameActive = true;
+            chargeBtn.disabled = false;
+            updateBattery();
+        });
+        
+        // 初始化游戏
+        updateBattery();
+    </script>
+</body>
+</html>
