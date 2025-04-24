@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI整容实验室</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+        }
+        #container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #video, #canvas {
+            display: none;
+        }
+        .effect-btn {
+            background: #0084ff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .effect-btn:active {
+            transform: scale(0.95);
+        }
+        #preview {
+            width: 100%;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>✨ AI整容实验室 ✨</h1>
+        <button id="startBtn">📸 拍照开始</button>
+        
+        <div id="effects">
+            <button class="effect-btn" onclick="applyEffect('nose')">👃 高挺鼻梁</button>
+            <button class="effect-btn" onclick="applyEffect('eyes')">👁️ 大眼特效</button>
+            <button class="effect-btn" onclick="applyEffect('face')">✨ 瘦脸魔法</button>
+            <button class="effect-btn" onclick="resetEffect()">🔄 重置原貌</button>
+        </div>
+
+        <canvas id="preview"></canvas>
+        <div style="margin-top: 20px;">
+            <button onclick="saveImage()" style="background: #4CAF50;">保存照片</button>
+        </div>
+    </div>
+
+    <!-- 引入face-api.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.2/dist/face-api.min.js"></script>
+    
+    <script>
+        let video, canvas, ctx;
+        let currentEffect = null;
+
+        async function startVideo() {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            video = document.createElement('video');
+            video.srcObject = stream;
+            video.play();
+            video.onloadedmetadata = () => {
+                canvas = document.getElementById('preview');
+                ctx = canvas.getContext('2d');
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                detectFace();
+            };
+        }
+
+        async function detectFace() {
+            const MODEL_URL = '/models'; // 需要部署模型文件
+            await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+            await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+            
+            setInterval(async () => {
+                const detections = await faceapi.detectSingleFace(
+                    video,
+                    new faceapi.TinyFaceDetectorOptions()
+                ).withFaceLandmarks();
+
+                if (detections) {
+                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                    applyCurrentEffect(detections.landmarks);
+                }
+            }, 100);
+        }
+
+        function applyCurrentEffect(landmarks) {
+            if (!currentEffect) return;
+
+            switch(currentEffect) {
+                case 'nose':
+                    // 鼻子增高效果
+                    const nosePoints = landmarks.getJawOutline();
+                    ctx.beginPath();
+                    ctx.moveTo(nosePoints[27].x, nosePoints[27].y - 5);
+                    ctx.lineTo(nosePoints[30].x, nosePoints[30].y - 8);
+                    ctx.strokeStyle = '#ffdab9';
+                    ctx.lineWidth = 3;
+                    ctx.stroke();
+                    break;
+                
+                case 'eyes':
+                    // 大眼效果
+                    const eyePoints = landmarks.getLeftEyeUpperLid();
+                    eyePoints.forEach(point => {
+                        ctx.beginPath();
+                        ctx.arc(point.x, point.y - 2, 3, 0, Math.PI * 2);
+                        ctx.fillStyle = '#ffffff';
+                        ctx.fill();
+                    });
+                    break;
+                
+                case 'face':
+                    // 瘦脸效果
+                    const facePoints = landmarks.getLeftEyeBrow();
+                    ctx.beginPath();
+                    ctx.moveTo(facePoints[0].x, facePoints[0].y);
+                    ctx.lineTo(facePoints[3].x * 0.95, facePoints[3].y);
+                    ctx.strokeStyle = '#ff69b4';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                    break;
+            }
+        }
+
+        function applyEffect(effect) {
+            currentEffect = effect;
+        }
+
+        function resetEffect() {
+            currentEffect = null;
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        }
+
+        function saveImage() {
+            const link = document.createElement('a');
+            link.download = '我的整容效果.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        // 初始化
+        startVideo();
+    </script>
+</body>
+</html>
